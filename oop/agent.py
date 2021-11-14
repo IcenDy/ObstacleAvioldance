@@ -7,10 +7,12 @@ class Robot():
         self.acceleration = np.array([0, 0]).reshape(2, 1)
         self.a_max = np.array([0, 0]).reshape(2, 1)
 class FireRobot(Robot):
-    def __init__(self, A_max, Radius):
+    def __init__(self, A_max, Radius, theta, position):
         super().__init__()
         self.a_max = A_max
         self.radius = Radius
+        self.direction = theta
+        self.position = position
     def Heading(self):
         pass
     def Clearance(self):

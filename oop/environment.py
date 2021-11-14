@@ -105,16 +105,18 @@ class Map():
     def __init__(self, width, length, resolution):
         self.resolution = resolution
         dx = resolution[0][0]
-        dy = resolution[0][1]
+        dy = resolution[1][0]
         self.length_d = int(length / dx)
         self.width_d = int(width / dy)
         self.obstacles = []
-        self.agent = []
+        self.agents = []
         self.walls = []
         self.goals = []
-    def Obstacle(self, pts): # polygon
+    def Obstacle_P(self, pts): # polygon
         pass
-    def Obstacle(self, center, radius): # ellipse
+    def Obstacle_E(self, center, radius): # ellipse
+        pass
+    def Obstacle_W(self, pts): # wall
         pass
     def Visible():
         pass
