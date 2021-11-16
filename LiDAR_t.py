@@ -5,7 +5,7 @@ from matplotlib.patches import Polygon, Ellipse
 sns.set(color_codes=True)
 import sympy
 
-FOV = 270  #//< 视场角（°）
+FOV = 120  #//< 视场角（°）
 angle_delta = 5  #//< 激光雷达角度分辨率
 num = int(FOV / angle_delta) + 1
 angle = np.linspace(-FOV / 2, FOV / 2, num, True)
@@ -61,10 +61,10 @@ def Computation(location0, direction0, mode = 'polygon'):
             for pt in xs:
                 points = np.array([float(pt[0]), float(pt[1])]).reshape(2, 1)
                 dist = np.linalg.norm(points - location0)
-                if (np.linalg.norm(points - location0 + direction[i]) >= max(dist, np.linalg.norm(direction[i]))):    
-                    if (dist < distance[i]):
-                        distance[i] = dist
-                else: dist = np.inf
+                # if (np.linalg.norm(points - location0 + direction[i]) >= max(dist, np.linalg.norm(direction[i]))):    
+                if (dist < distance[i]):
+                    distance[i] = dist
+                # else: dist = np.inf
     ### wall: x=0 x=100 y=0 y=100
     corners = [sympy.Point(0, 0), sympy.Point(length_d, 0), sympy.Point(length_d, width_d), sympy.Point(0, width_d)]
     wall_b = sympy.geometry.Segment(corners[0], corners[1])
@@ -93,10 +93,10 @@ def Computation(location0, direction0, mode = 'polygon'):
 def Visualization(alpha, location0, distance):
     plt.figure(figsize=(10, 10))
     ax = plt.gca()
-    ax.add_patch(polygon)
-    polygon.set_color(sns.xkcd_rgb['nice blue'])
-    # ax.add_patch(ellipse)
-    # ellipse.set_color(sns.xkcd_rgb['clay brown'])
+    # ax.add_patch(polygon)
+    # polygon.set_color(sns.xkcd_rgb['nice blue'])
+    ax.add_patch(ellipse)
+    ellipse.set_color(sns.xkcd_rgb['clay brown'])
     plt.plot(np.zeros(101), np.linspace(0, length_d, num=101, endpoint=True), linewidth= 5, color= sns.xkcd_rgb['tea'])       # bottom
     plt.plot(100 * np.ones(101), np.linspace(0, length_d, num=101, endpoint=True), linewidth= 5, color= sns.xkcd_rgb['tea'])  # top
     plt.plot(np.linspace(0, length_d, num=101, endpoint=True), np.zeros(101), linewidth= 5, color= sns.xkcd_rgb['tea'])  # left
@@ -119,7 +119,7 @@ def main():
     dire_alpha = rotate_matrix(alpha).dot(direction0)
     direction0[0, :] = dire_alpha[0, 0, 0]
     direction0[1, :] = dire_alpha[0, 1, 0]
-    distance = Computation(location0,direction0, mode='polygon')
+    distance = Computation(location0,direction0, mode='ellipse')
     print("distance: ", distance)
     Visualization(alpha, location0, distance)
     return 0
