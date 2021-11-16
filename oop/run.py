@@ -12,7 +12,7 @@ def main():
     Env = environment.Map(2, 2, 0.02 * np.ones((2, 1)))
     ob_labels = []
     pts_ob = [(30, 69), (69, 69), (69, 20), (71, 20), (71, 71), (30, 71)]
-    Env.Obstacle_P(pts_ob)
+    Env.Obstacle_P6(pts_ob)
     ob_labels.append("polygon")
     Env.goals.append(np.array([85, 85]).reshape(2, 1))
     Env.agents.append(Robot.position)
@@ -42,7 +42,7 @@ def main():
         if (np.linalg.norm(agent[-1], Env.goals[-1]) < 1e-2):
             break
         pass
-    Env.Visible()
+    Env.Visualization()
     return 0
 
 if __name__ == '__main__':

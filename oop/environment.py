@@ -1,10 +1,11 @@
 from operator import le
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from numpy.lib.function_base import angle, select
 import seaborn as sns
 sns.set(color_codes=True)
-from sympy.geometry import Point, Segment, Ray, Ellipse, Polygon, intersection, point
+from sympy.geometry import Point, Segment, Ray, Ellipse, Polygon, ellipse, intersection, point
 from utils import rotate_matrix 
 
 class Sensor():
@@ -150,12 +151,37 @@ class Map():
         self.agents = []
         self.goals = []
         self.labels = []
-    def Obstacle_P(self, pts): # polygon
-        
-        pass
-    def Obstacle_E(self, center, radius): # ellipse
-        pass
+        self.pts = [] # obstacle原始数据,便于可视化
+    def Obstacle_P6(self, pts): # polygon: 6 points
+        ob = Polygon(pts[0], pts[1], pts[2], pts[3], pts[4], pts[5])
+        self.obstacles.append(ob)
+        self.pts.append(ob)
+    def Obstacle_E(self, ob): # ellipse  center hradius vradius
+        ob = Ellipse(ob[0], ob[1], ob[2])
+        self.obstacles.append(ob)
+        self.pts.append(ob)
     def Obstacle_W(self, pts): # wall
-        pass
-    def Visible():
-        pass
+        wall = []
+        for i in range(len(pts)):
+            wall_i = Segment(pts[i], pts[i - 1])
+            wall.append(wall_i)
+        self.obstacles.append(wall)
+        self.pts.append(ob)
+    def Visualization(self, direction, distance):
+        plt.figure(figsize=(10, 10))
+        ax = plt.gca()
+        # obstacles
+        for i in range(len(self.obstacles)):
+            if (self.labels[i] == "polygon"):
+                polygon_i = mpatches.Polygon(np.array(self.pts[i]))
+                ax.add_patch(polygon_i)
+                polygon_i.set_color(sns.xkcd_rgb['nice blue'])
+            elif (self.labels[i] == "ellipse"):
+                ellipse_i = mpatches.Ellipse(self.pts[i][0], 2 * self.pts[i][1], 2 * self.pts[i][2])
+                ax.add_patch(ellipse_i)
+                ellipse_i.set_color(sns.xkcd_rgb['clay brown'])
+            elif (self.labels[i] == "wall"):
+                pass
+        # beam
+        
+        # robot&goal
