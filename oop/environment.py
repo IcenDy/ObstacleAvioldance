@@ -5,7 +5,7 @@ import matplotlib.patches as mpatches
 from numpy.lib.function_base import angle, select
 import seaborn as sns
 sns.set(color_codes=True)
-from sympy.geometry import Point, Segment, Ray, Ellipse, Polygon, ellipse, intersection, point
+from sympy.geometry import Point, Segment, Ray, Ellipse, Polygon, ellipse, intersection, line, point
 from utils import rotate_matrix 
 
 class Sensor():
@@ -48,8 +48,8 @@ class LiDAR(Sensor):
         direct_0[0, :] = direct_theta[0, 0, 0]
         direct_0[1, :] = direct_theta[0, 1, 0]
         num_angle = int(self.FOV / self.resolution) + 1
-        angles = np.linspace(-self.FOV / 2, self.FOV / 2, num_angle, True)
-        direct_i = rotate_matrix(angles).dot(direct_0)
+        self.angles = np.linspace(-self.FOV / 2, self.FOV / 2, num_angle, True)
+        direct_i = rotate_matrix(self.angles).dot(direct_0)
         distance = np.ones(num_angle) * np.inf
         for i in range(direct_i.shape[0]):
             pt_0 = Point(self.position[0, 0], self.position[1, 0])
@@ -155,19 +155,19 @@ class Map():
     def Obstacle_P6(self, pts): # polygon: 6 points
         ob = Polygon(pts[0], pts[1], pts[2], pts[3], pts[4], pts[5])
         self.obstacles.append(ob)
-        self.pts.append(ob)
-    def Obstacle_E(self, ob): # ellipse  center hradius vradius
-        ob = Ellipse(ob[0], ob[1], ob[2])
+        self.pts.append(pts)
+    def Obstacle_E(self, pts): # ellipse  center hradius vradius
+        ob = Ellipse(pts[0], pts[1], pts[2])
         self.obstacles.append(ob)
-        self.pts.append(ob)
+        self.pts.append(pts)
     def Obstacle_W(self, pts): # wall
         wall = []
         for i in range(len(pts)):
             wall_i = Segment(pts[i], pts[i - 1])
             wall.append(wall_i)
         self.obstacles.append(wall)
-        self.pts.append(ob)
-    def Visualization(self, direction, distance):
+        self.pts.append(pts)
+    def Visualization(self, LiDAR):
         plt.figure(figsize=(10, 10))
         ax = plt.gca()
         # obstacles
@@ -181,7 +181,20 @@ class Map():
                 ax.add_patch(ellipse_i)
                 ellipse_i.set_color(sns.xkcd_rgb['clay brown'])
             elif (self.labels[i] == "wall"):
-                pass
+                for j in range(len(self.pts[i])):
+                    xx = [self.pts[i][j, 0], self.pts[i][j - 1, 0]]
+                    yy = [self.pts[i][j, 1], self.pts[i][j - 1, 1]]
+                    plt.plot(xx, yy, linewidth=5, color= sns.xkcd_rgb['tea'])
         # beam
-        
-        # robot&goal
+        for i in range(LiDAR.values.shape[0]):
+            theta_i = (LiDAR.angles[i] + LiDAR.direction) / 180 * np.pi
+            end_i = LiDAR.position + np.array([LiDAR.values[i] * np.cos(theta_i), LiDAR.values[i] * np.sin(theta_i)]).reshape(2, 1)
+            xx = [LiDAR.position[0, 0], end_i[0, 0]]
+            yy = [LiDAR.position[1, 0], end_i[1, 0]]
+            plt.plot(xx, yy, linewidth=2, color=sns.xkcd_rgb['ruby'])
+        # robot
+        ax.scatter(self.agents[-1][0, 0], self.agents[-1][1, 0], s=50, c=sns.xkcd_rgb['dark maroon'])
+        # goal
+        ax.scatter(self.goals[-1][0, 0], self.goals[-1][1, 0], s=50, c=sns.xkcd_rgb['dirty yellow'])
+        ax.axis([0, self.length_d, 0, self.width_d])
+        # plt.show()

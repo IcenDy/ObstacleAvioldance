@@ -42,7 +42,7 @@ def main():
         if (np.linalg.norm(agent[-1], Env.goals[-1]) < 1e-2):
             break
         pass
-    Env.Visualization()
+    Env.Visualization(lidar)
     return 0
 
 if __name__ == '__main__':
