@@ -89,7 +89,7 @@ class LiDAR(Sensor):
         
 
 class IMU(Sensor):
-    def __init__(self, resolution, position, label):
+    def __init__(self, resolution, position, direction, label):
         """
         # @brief IMU构造函数
         # @param resolution  分辨率
@@ -100,22 +100,24 @@ class IMU(Sensor):
         self.resolution = resolution
         self.position = position
         self.name = label
-    def Communication(self):
+        self.value = direction
+    def Communication(self, robot, dt):
         """
         # @brief IMU通讯 
         # @var status IMU状态
         # @return 回传内容
         """
-        self.status = ...
-        # 模拟IMU测量
-        return ...
-    def Compute(self):
+        self.status = True
+        angle = self.value + robot.velocity[1, 0] * dt
+        return angle
+    def Compute(self, robot, dt):
         """
         # @brief 根据通讯回传内容计算示数
         # @var value IMU示数
         """
-        results = self.Communication()
-        self.value = ...
+        if (self.status):
+            results = self.Communication(robot, dt)
+            self.value = results
 
 class Actuator():
     def __init__(self):

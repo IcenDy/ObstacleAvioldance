@@ -24,21 +24,22 @@ def main():
     sen_labels.append("lidar")
     lidar = environment.LiDAR(120, np.array([0, 200]).reshape(2, 1), 4, Env.agents[0], Robot.direction, sen_labels[-1])
     sen_labels.append("IMU901")    
-    imu = environment.IMU(0.05, Env.agents[-1], sen_labels[-1])
+    imu = environment.IMU(0.05, Env.agents[-1], Robot.direction, sen_labels[-1])
     # actuator
     act_labels = []
     act_labels.append("track")
     track = environment.Track(Env.agents[0], 0.035, 0.2, act_labels[-1])
-    t = 0
+    t, dt = 0, 0.1
     while (t < 1500):
+        Robot.dt = dt
         lidar.position = Robot.position
         lidar.direction = Robot.direction
         lidar.Compute(Env.obstacles, Env.labels)
-        result_l = lidar.value
-        imu.Communication()
-        result_i = imu.Compute()
+        imu.Compute(Robot, dt)
         # Robot: DWA
+        
         # Env: refresh position
+        Robot.direction = imu.value
         if (np.linalg.norm(agent[-1], Env.goals[-1]) < 1e-2):
             break
         pass
