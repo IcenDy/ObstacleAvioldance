@@ -44,10 +44,11 @@ class LiDAR(Sensor):
         # @var status LiDAR状态
         # @return 回传内容
         """
-        direct_0 = np.array([1, 0]).reshape(2, 1)
+        direct_0 = np.array([1.0, 0.0]).reshape(2, 1)
         direct_theta = rotate_matrix(np.array([self.direction])).dot(direct_0)
-        direct_0[0, :] = direct_theta[0, 0, 0]
-        direct_0[1, :] = direct_theta[0, 1, 0]
+        print(direct_theta[0, 0, 0], direct_theta[0, 1, 0])
+        direct_0[0, 0] = direct_theta[0, 0, 0]
+        direct_0[1, 0] = direct_theta[0, 1, 0]
         num_angle = int(self.FOV / self.resolution) + 1
         self.angles = np.linspace(-self.FOV / 2, self.FOV / 2, num_angle, True)
         self.direct_i = rotate_matrix(self.angles).dot(direct_0)

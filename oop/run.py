@@ -8,12 +8,12 @@ import environment
 
 def main():
     # robot
-    Robot = agent.FireRobot(np.array([16, 1.5]).reshape(2, 1), np.array([5, 2]).reshape(2, 1), 9, 0, np.array([20.0, 20.0]).reshape(2, 1))  # [0.2, 0.4], 0.36, resolution=0.02
+    Robot = agent.FireRobot(np.array([16.0, 1.5]).reshape(2, 1), np.array([5.0, 2.0]).reshape(2, 1), 9.0, 0.0, np.array([20.0, 20.0]).reshape(2, 1))  # [0.2, 0.4], 0.36, resolution=0.02
     Robot.alpha = 0.8
     Robot.beta = 0.1
     Robot.gamma = 0.1
     # map
-    Env = environment.Map(2, 2, 0.02 * np.ones((2, 1)))
+    Env = environment.Map(2.0, 2.0, 0.02 * np.ones((2, 1)))
     # ob_labels = []
     pts_ob = [(30, 69), (69, 69), (69, 20), (71, 20), (71, 71), (30, 71)]
     Env.Obstacle_P6(pts_ob)
@@ -26,7 +26,7 @@ def main():
     # sensor
     sen_labels = []
     sen_labels.append("lidar")
-    lidar = environment.LiDAR(120, np.array([0, 200]).reshape(2, 1), 4, Env.agents[0], Robot.direction, sen_labels[-1])
+    lidar = environment.LiDAR(120, np.array([0, 200]).reshape(2, 1), 10, Env.agents[0], Robot.direction, sen_labels[-1])
     sen_labels.append("IMU901")    
     imu = environment.IMU(0.05, Env.agents[-1], Robot.direction, sen_labels[-1])
     # actuator
@@ -37,7 +37,7 @@ def main():
     dv = [0.05, 0.05]
     while (t < 1500):
         Robot.dt = dt
-        Robot.acceleration = np.array([2.5, 1]).reshape(2, 1)
+        Robot.acceleration = np.array([2.5, 1.0]).reshape(2, 1)
         lidar.position = Robot.position
         lidar.direction = Robot.direction
         lidar.Compute(Env.obstacles, Env.labels)
@@ -52,7 +52,7 @@ def main():
         Env.agents.append(Robot.position)
         if (np.linalg.norm(Env.agents[-1] - Env.goals[-1]) < 1e-2):
             break
-        Env.Visualization(lidar)
+    Env.Visualization(lidar)
     # plt.show()
     return 0
 
