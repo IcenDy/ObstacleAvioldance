@@ -5,7 +5,7 @@ import matplotlib.patches as mpatches
 from numpy.lib.function_base import angle, select
 import seaborn as sns
 sns.set(color_codes=True)
-from sympy.geometry import Point, Segment, Ray, Ellipse, Polygon, ellipse, intersection, line, point
+from sympy.geometry import Point, Segment, Ray, Ellipse, Polygon, intersection
 from utils import rotate_matrix 
 
 class Sensor():
@@ -48,12 +48,12 @@ class LiDAR(Sensor):
         direct_0[0, :] = direct_theta[0, 0, 0]
         direct_0[1, :] = direct_theta[0, 1, 0]
         num_angle = int(self.FOV / self.resolution) + 1
-        self.angles = np.linspace(-self.FOV / 2, self.FOV / 2, num_angle, True)
-        direct_i = rotate_matrix(self.angles).dot(direct_0)
+        angles = np.linspace(-self.FOV / 2, self.FOV / 2, num_angle, True)
+        self.direct_i = rotate_matrix(self.angles).dot(direct_0)
         distance = np.ones(num_angle) * np.inf
-        for i in range(direct_i.shape[0]):
+        for i in range(self.direct_i.shape[0]):
             pt_0 = Point(self.position[0, 0], self.position[1, 0])
-            pt_i = Point(self.position[0, 0] + direct_i[i, 0, 0], self.position[1, 0] + direct_i[i, 1, 0])
+            pt_i = Point(self.position[0, 0] + self.direct_i[i, 0, 0], self.position[1, 0] + self.direct_i[i, 1, 0])
             ray_i = Ray(pt_0, pt_i)
             for j in range(len(obstacles)):
                 if ((labels[j] == "polygon")or(labels[j] == "ellipse")):
