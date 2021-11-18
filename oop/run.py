@@ -13,15 +13,15 @@ def main():
     Robot.gamma = 0.1
     # map
     Env = environment.Map(2, 2, 0.02 * np.ones((2, 1)))
-    ob_labels = []
+    # ob_labels = []
     pts_ob = [(30, 69), (69, 69), (69, 20), (71, 20), (71, 71), (30, 71)]
     Env.Obstacle_P6(pts_ob)
-    ob_labels.append("polygon")
+    Env.labels.append("polygon")
     Env.goals.append(np.array([85, 85]).reshape(2, 1))
     Env.agents.append(Robot.position)
     pts_wall = [(0, 0), (Env.length_d, 0), (Env.length_d, Env.width_d), (0, Env.width_d)]
     Env.Obstacle_W(pts_wall)
-    ob_labels.append("wall")
+    Env.labels.append("wall")
     # sensor
     sen_labels = []
     sen_labels.append("lidar")
@@ -46,6 +46,7 @@ def main():
         track.Kinematics(v_dwa, Robot.direction, dt)
         Robot.position = track.position
         Robot.direction = imu.value
+        Env.agents.append(Robot.position)
         if (np.linalg.norm(agent[-1], Env.goals[-1]) < 1e-2):
             break
     Env.Visualization(lidar)

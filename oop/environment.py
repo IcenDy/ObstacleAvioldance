@@ -36,19 +36,19 @@ class LiDAR(Sensor):
         self.position = position
         self.name = label
         self.direction = direction
+        self.status = True
     def Communication(self, obstacles, labels):
         """
         # @brief LiDAR通讯 
         # @var status LiDAR状态
         # @return 回传内容
         """
-        self.status = True
         direct_0 = np.array([1, 0]).reshape(2, 1)
         direct_theta = rotate_matrix(np.array([self.direction])).dot(direct_0)
         direct_0[0, :] = direct_theta[0, 0, 0]
         direct_0[1, :] = direct_theta[0, 1, 0]
         num_angle = int(self.FOV / self.resolution) + 1
-        angles = np.linspace(-self.FOV / 2, self.FOV / 2, num_angle, True)
+        self.angles = np.linspace(-self.FOV / 2, self.FOV / 2, num_angle, True)
         self.direct_i = rotate_matrix(self.angles).dot(direct_0)
         distance = np.ones(num_angle) * np.inf
         for i in range(self.direct_i.shape[0]):
@@ -57,12 +57,13 @@ class LiDAR(Sensor):
             ray_i = Ray(pt_0, pt_i)
             for j in range(len(obstacles)):
                 if ((labels[j] == "polygon")or(labels[j] == "ellipse")):
-                    xs = intersection(ray_i, obstacles[j])
-                    for pt in xs:
-                        point = np.array([float(pt[0]), float(pt[1])]).reshape(2, 1)
-                        dist = np.linalg.norm(point - self.position)
-                        if (dist < distance[i]):
-                            distance[i] = dist
+                    xs = intersection(ray_i, obstacles[j])  # ?
+                    if (len(xs)):
+                        for pt in xs:
+                            point = np.array([float(pt[0]), float(pt[1])]).reshape(2, 1)
+                            dist = np.linalg.norm(point - self.position)
+                            if (dist < distance[i]):
+                                distance[i] = dist
                 elif (labels[j] == "wall"):
                     for k in range(len(obstacles[j])):
                         xs = intersection(ray_i, obstacles[j][k])
@@ -101,13 +102,13 @@ class IMU(Sensor):
         self.position = position
         self.name = label
         self.value = direction
+        self.status = True
     def Communication(self, robot, dt):
         """
         # @brief IMU通讯 
         # @var status IMU状态
         # @return 回传内容
         """
-        self.status = True
         angle = self.value + robot.velocity[1, 0] * dt
         return angle
     def Compute(self, robot, dt):
