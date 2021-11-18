@@ -7,7 +7,10 @@ import environment
 
 def main():
     # robot
-    Robot = agent.FireRobot(np.array([5, 6]).reshape(2, 1), 9, 0, np.array([20, 20]).reshape(2, 1))  # [0.2, 0.4], 0.36, resolution=0.02
+    Robot = agent.FireRobot(np.array([16, 1.5]).reshape(2, 1), np.array([5, 2]).reshape(2, 1), 9, 0, np.array([20, 20]).reshape(2, 1))  # [0.2, 0.4], 0.36, resolution=0.02
+    Robot.alpha = 0.8
+    Robot.beta = 0.1
+    Robot.gamma = 0.1
     # map
     Env = environment.Map(2, 2, 0.02 * np.ones((2, 1)))
     ob_labels = []
@@ -30,6 +33,7 @@ def main():
     act_labels.append("track")
     track = environment.Track(Env.agents[0], 0.035, 0.2, act_labels[-1])
     t, dt = 0, 0.1
+    dv = [0.05, 0.05]
     while (t < 1500):
         Robot.dt = dt
         lidar.position = Robot.position
