@@ -58,11 +58,11 @@ class FireRobot(Robot):
         G0 = 0
         v_dwa = np.zeros((2, 1))
         if ((vd_min <= vd_max)and(wd_min <= wd_max)):
-            num_v = int((vd_max - vd_min) / dv[0, 0]) + 1
-            num_w = int((wd_max - wd_min) / dv[1, 0]) + 1
+            num_v = int((vd_max - vd_min) / dv[0]) + 1
+            num_w = int((wd_max - wd_min) / dv[1]) + 1
             for i in range(num_v):
                 for j in range(num_w):
-                    v_pred = np.array([vd_min + i * dv[0, 0], wd_min + j * dv[1, 0]]).reshape(2, 1)
+                    v_pred = np.array([vd_min + i * dv[0], wd_min + j * dv[1]]).reshape(2, 1)
                     F_i = np.zeros((2, 1))
                     theta_pred = self.direction + v_pred[1, 0] * self.dt
                     if (self.velocity[1, 0] == 0):

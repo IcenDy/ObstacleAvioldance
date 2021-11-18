@@ -139,8 +139,10 @@ class Track(Actuator):
         Mat_trans = 1 / self.R * np.array([1, self.D / 2, 1, -self.D / 2]).reshape(2, 2)
         w_LR = Mat_trans * velocity
         return w_LR
-    def Commutation(self):
-        pass
+    def Kinematics(self, velocity, direction, dt):
+        # self.VelocityTrans(velocity)
+        self.position[0, 0] += velocity[0, 0] * np.cos(direction) * dt
+        self.position[1, 0] += velocity[1, 0] * np.sin(direction) * dt
 
 class Map():
     def __init__(self, width, length, resolution):

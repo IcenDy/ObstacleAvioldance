@@ -41,12 +41,13 @@ def main():
         lidar.Compute(Env.obstacles, Env.labels)
         imu.Compute(Robot, dt)
         # Robot: DWA
-        
+        v_dwa, G = Robot.Decision_DWA(Env.goals[-1], lidar, dv)
         # Env: refresh position
+        track.Kinematics(v_dwa, Robot.direction, dt)
+        Robot.position = track.position
         Robot.direction = imu.value
         if (np.linalg.norm(agent[-1], Env.goals[-1]) < 1e-2):
             break
-        pass
     Env.Visualization(lidar)
     return 0
 
