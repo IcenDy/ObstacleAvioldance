@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import threading
 import time
 
@@ -7,7 +8,7 @@ import environment
 
 def main():
     # robot
-    Robot = agent.FireRobot(np.array([16, 1.5]).reshape(2, 1), np.array([5, 2]).reshape(2, 1), 9, 0, np.array([20, 20]).reshape(2, 1))  # [0.2, 0.4], 0.36, resolution=0.02
+    Robot = agent.FireRobot(np.array([16, 1.5]).reshape(2, 1), np.array([5, 2]).reshape(2, 1), 9, 0, np.array([20.0, 20.0]).reshape(2, 1))  # [0.2, 0.4], 0.36, resolution=0.02
     Robot.alpha = 0.8
     Robot.beta = 0.1
     Robot.gamma = 0.1
@@ -36,6 +37,7 @@ def main():
     dv = [0.05, 0.05]
     while (t < 1500):
         Robot.dt = dt
+        Robot.acceleration = np.array([2.5, 1]).reshape(2, 1)
         lidar.position = Robot.position
         lidar.direction = Robot.direction
         lidar.Compute(Env.obstacles, Env.labels)
@@ -44,12 +46,14 @@ def main():
         v_dwa, G = Robot.Decision_DWA(Env.goals[-1], lidar, dv)
         # Env: refresh position
         track.Kinematics(v_dwa, Robot.direction, dt)
+        Robot.velocity = v_dwa
         Robot.position = track.position
         Robot.direction = imu.value
         Env.agents.append(Robot.position)
-        if (np.linalg.norm(agent[-1], Env.goals[-1]) < 1e-2):
+        if (np.linalg.norm(Env.agents[-1] - Env.goals[-1]) < 1e-2):
             break
-    Env.Visualization(lidar)
+        Env.Visualization(lidar)
+    # plt.show()
     return 0
 
 if __name__ == '__main__':

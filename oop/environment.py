@@ -1,4 +1,5 @@
 from operator import le
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -57,11 +58,18 @@ class LiDAR(Sensor):
             ray_i = Ray(pt_0, pt_i)
             for j in range(len(obstacles)):
                 if ((labels[j] == "polygon")or(labels[j] == "ellipse")):
-                    xs = intersection(ray_i, obstacles[j])  # ?
+                    xs = intersection(ray_i, obstacles[j])
                     if (len(xs)):
                         for pt in xs:
-                            point = np.array([float(pt[0]), float(pt[1])]).reshape(2, 1)
-                            dist = np.linalg.norm(point - self.position)
+                            if (pt.is_Point):
+                                point = np.array([float(pt[0]), float(pt[1])]).reshape(2, 1)
+                                dist = np.linalg.norm(point - self.position)
+                            else:
+                                point_0 = np.array([float(pt.bounds[0]), float(pt.bounds[1])]).reshape(2, 1)
+                                point_1 = np.array([float(pt.bounds[2]), float(pt.bounds[3])]).reshape(2, 1)
+                                dist_0 = np.linalg.norm(point_0 - self.position)
+                                dist_1 = np.linalg.norm(point_1 - self.position)
+                                dist = min(dist_0, dist_1)
                             if (dist < distance[i]):
                                 distance[i] = dist
                 elif (labels[j] == "wall"):
@@ -187,19 +195,21 @@ class Map():
                 ellipse_i.set_color(sns.xkcd_rgb['clay brown'])
             elif (self.labels[i] == "wall"):
                 for j in range(len(self.pts[i])):
-                    xx = [self.pts[i][j, 0], self.pts[i][j - 1, 0]]
-                    yy = [self.pts[i][j, 1], self.pts[i][j - 1, 1]]
-                    plt.plot(xx, yy, linewidth=5, color= sns.xkcd_rgb['tea'])
+                    xx = [self.pts[i][j][0], self.pts[i][j - 1][0]]
+                    yy = [self.pts[i][j][1], self.pts[i][j - 1][1]]
+                    ax.plot(xx, yy, linewidth=5, color= sns.xkcd_rgb['tea'])
         # beam
-        for i in range(LiDAR.values.shape[0]):
+        for i in range(LiDAR.value.shape[0]):
             theta_i = (LiDAR.angles[i] + LiDAR.direction) / 180 * np.pi
-            end_i = LiDAR.position + np.array([LiDAR.values[i] * np.cos(theta_i), LiDAR.values[i] * np.sin(theta_i)]).reshape(2, 1)
+            end_i = LiDAR.position + np.array([LiDAR.value[i] * np.cos(theta_i), LiDAR.value[i] * np.sin(theta_i)]).reshape(2, 1)
             xx = [LiDAR.position[0, 0], end_i[0, 0]]
             yy = [LiDAR.position[1, 0], end_i[1, 0]]
-            plt.plot(xx, yy, linewidth=2, color=sns.xkcd_rgb['ruby'])
+            ax.plot(xx, yy, linewidth=2, color=sns.xkcd_rgb['ruby'])
         # robot
-        ax.scatter(self.agents[-1][0, 0], self.agents[-1][1, 0], s=50, c=sns.xkcd_rgb['dark maroon'])
+        for i in range(len(self.agents)):
+            ax.scatter(self.agents[i][0, 0], self.agents[i][1, 0], s=50, c=sns.xkcd_rgb['dark maroon'])
+            time.sleep(0.2)
         # goal
         ax.scatter(self.goals[-1][0, 0], self.goals[-1][1, 0], s=50, c=sns.xkcd_rgb['dirty yellow'])
         ax.axis([0, self.length_d, 0, self.width_d])
-        # plt.show()
+        plt.show()
