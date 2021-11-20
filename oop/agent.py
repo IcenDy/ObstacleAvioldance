@@ -24,11 +24,13 @@ class FireRobot(Robot):
         self.beta = 0
         self.gamma = 0
     def Heading(self, pos, target, theta):
-        v_d = np.array([np.cos(theta), np.sin(theta)]).reshape(2, 1)
+        # v_d = np.array([np.cos(theta), np.sin(theta)]).reshape(2, 1)
         v_t = target - pos
-        angle = np.arccos(v_d.T.dot(v_t) /  np.linalg.norm(v_t))
-        return angle
-    def Clearance(self, v_pred, lidar):
+        angle_t = np.arctan2(v_t[1, 0], v_t[0, 0])
+        # angle = np.arccos(v_d.T.dot(v_t) /  np.linalg.norm(v_t))
+        heading = np.abs(angle_t - theta)
+        return heading
+    def Clearance(self, v_pred, lidar):  # inf严重影响了效果, 试图修改为5点轨迹与10个lidar点之间distance
         if (v_pred[1, 0] != 0):
             Mx_i = -v_pred[0, 0] / v_pred[1, 0] * np.sin(self.direction)
             My_i = v_pred[0, 0] / v_pred[1, 0] * np.cos(self.direction)

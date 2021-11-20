@@ -10,17 +10,17 @@ import environment
 
 def main():
     # robot
-    Robot = agent.FireRobot(np.array([75.0, 0.5 * np.pi]).reshape(2, 1), np.array([5.0, 2.0]).reshape(2, 1), 15.0, 0.0, np.array([20.0, 20.0]).reshape(2, 1))  # [1.5, 90°], 0.30, resolution=0.02
+    Robot = agent.FireRobot(np.array([75.0, 0.5 * np.pi]).reshape(2, 1), np.array([5.0, 2.0]).reshape(2, 1), 15.0, 0.25 * np.pi, np.array([20.0, 20.0]).reshape(2, 1))  # [1.5, 90°], 0.30, resolution=0.02
     Robot.alpha = 0.1
     Robot.beta = 1.0
     Robot.gamma = 0.1
     # map
     Env = environment.Map(3, 3, 0.02 * np.ones((2, 1)))  # 单位: m
     # ob_labels = []
-    pts_ob = [(30, 69), (69, 69), (69, 20), (71, 20), (71, 71), (30, 71)]
+    pts_ob = [(40, 89), (79, 89), (79, 40), (81, 40), (81, 91), (40, 91)]
     Env.Obstacle_P6(pts_ob)
     Env.labels.append("polygon")
-    Env.goals.append(np.array([85, 85]).reshape(2, 1))
+    Env.goals.append(np.array([115, 115]).reshape(2, 1))
     Env.agents.append(Robot.position)
     pts_wall = [(0, 0), (Env.length_d, 0), (Env.length_d, Env.width_d), (0, Env.width_d)]
     Env.Obstacle_W(pts_wall)
@@ -45,6 +45,7 @@ def main():
         # lidar.position = Robot.position
         # lidar.direction = Robot.direction
         lidar.Compute(Env.obstacles, Env.labels)
+        Env.Visualization(lidar)
         # imu.Compute(Robot, dt)
         # Robot: DWA
         v_dwa, G, F_i = Robot.Decision_DWA(Env.goals[-1], lidar, dv)
@@ -58,7 +59,6 @@ def main():
         print("v, w: ", v_dwa)
         print("position: ", track.position)
         print("direction: ", imu.value)
-        print("\n")
         Env.agents.append(Robot.position)
         # print(imu.value)
         if (np.linalg.norm(Env.agents[-1] - Env.goals[-1]) < 5):
@@ -66,7 +66,6 @@ def main():
         lidar.position = Robot.position
         lidar.direction = Robot.direction
         t += 1
-        # Env.Visualization(lidar)
     # plt.show()
     return 0
 

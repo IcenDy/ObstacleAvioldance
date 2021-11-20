@@ -30,10 +30,10 @@ class LiDAR(Sensor):
         # @param name        LiDAR名称(字符串)
         """
         super().__init__()
-        self.FOV = FOV
+        self.FOV = FOV * np.pi / 180
         self.range = range
         # self.value = range[1, 0] * np.ones()
-        self.resolution = resolution
+        self.resolution = resolution * np.pi / 180
         self.position = position
         self.name = label
         self.direction = direction
@@ -127,7 +127,7 @@ class IMU(Sensor):
         """
         if (self.status):
             results = self.Communication(robot, dt)
-            self.value = results #* 180 / np.pi
+            self.value = results
 
 class Actuator():
     def __init__(self):
@@ -200,7 +200,7 @@ class Map():
                     ax.plot(xx, yy, linewidth=5, color= sns.xkcd_rgb['tea'])
         # beam
         for i in range(LiDAR.value.shape[0]):
-            theta_i = (LiDAR.angles[i] + LiDAR.direction) / 180 * np.pi
+            theta_i = LiDAR.angles[i] + LiDAR.direction
             end_i = LiDAR.position + np.array([LiDAR.value[i] * np.cos(theta_i), LiDAR.value[i] * np.sin(theta_i)]).reshape(2, 1)
             xx = [LiDAR.position[0, 0], end_i[0, 0]]
             yy = [LiDAR.position[1, 0], end_i[1, 0]]
@@ -212,4 +212,4 @@ class Map():
         # goal
         ax.scatter(self.goals[-1][0, 0], self.goals[-1][1, 0], s=50, c=sns.xkcd_rgb['dirty yellow'])
         ax.axis([0, self.length_d, 0, self.width_d])
-        # plt.show()
+        plt.show()
