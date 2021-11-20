@@ -60,40 +60,64 @@ class FireRobot(Robot):
         else:
             projection = 0
         return projection
+    def Prediction_P(self, v_pred):
+        d_pos = np.zeros((2, 1))
+        theta_pred = self.direction + v_pred[1, 0] * self.dt
+        if (v_pred[1, 0] == 0):
+            Fx_i = v_pred[0, 0] * np.cos(self.direction) * self.dt
+            Fy_i = v_pred[0, 0] * np.sin(self.direction) * self.dt
+        else:
+            Fx_i = -v_pred[0, 0] / v_pred[1, 0] * (np.sin(self.direction) - np.sin(theta_pred))
+            Fy_i = v_pred[0, 0] / v_pred[1, 0] * (np.cos(self.direction) - np.cos(theta_pred))
+        d_pos[0, 0] = Fx_i
+        d_pos[1, 0] = Fy_i
+        return d_pos
+
     def Decision_DWA(self, target, lidar, dv):
-        vd_min = max(0, self.velocity[0, 0] - self.acceleration[0, 0] * self.dt)
-        wd_min = max(0, self.velocity[1, 0] - self.acceleration[1, 0] * self.dt)
+        vd_min = max(0.5, self.velocity[0, 0] - self.acceleration[0, 0] * self.dt)
+        wd_min = max(-self.v_max[1, 0], self.velocity[1, 0] - self.acceleration[1, 0] * self.dt)
         vd_max = min(self.v_max[0, 0], self.velocity[0, 0] + self.acceleration[0, 0] * self.dt)
         wd_max = min(self.v_max[1, 0], self.velocity[1, 0] + self.acceleration[1, 0] * self.dt)
+        # print("v", vd_min, " ", vd_max)
+        # print('w', wd_min, " ", wd_max)
         G0 = -np.inf
         v_dwa = np.zeros((2, 1))
+        F_i = np.zeros((2, 1))
         if ((vd_min <= vd_max)and(wd_min <= wd_max)):
             num_v = int((vd_max - vd_min) / dv[0]) + 1
             num_w = int((wd_max - wd_min) / dv[1]) + 1
+            dist_0 = self.Clearance(self.velocity, lidar)  # 保持当前运动状态下是否存在障碍物
+            if (dist_0 == np.inf):
+                return self.velocity, np.inf, self.Prediction_P(self.velocity)
             for i in range(num_v):
                 for j in range(num_w):
-                    v_pred = np.array([vd_max - i * dv[0], wd_max - j * dv[1]]).reshape(2, 1)
-                    F_i = np.zeros((2, 1))
+                    v_pred = np.array([vd_min + i * dv[0], wd_min + j * dv[1]]).reshape(2, 1)
+                    dist = self.Clearance(v_pred, lidar)
+                    if ((v_pred[0, 0] > np.sqrt(2 * dist * self.acceleration[0, 0])) or (v_pred[1, 0] > np.sqrt(2 * dist * self.acceleration[1, 0]))):
+                        break
                     theta_pred = self.direction + v_pred[1, 0] * self.dt
-                    if (self.velocity[1, 0] == 0):
-                        Fx_i = v_pred[0, 0] * np.cos(self.direction) * self.dt
-                        Fy_i = v_pred[0, 0] * np.sin(self.direction) * self.dt
-                    else:
-                        Fx_i = v_pred[0, 0] / v_pred[1, 0] * (np.sin(self.direction) - np.sin(theta_pred))
-                        Fy_i = -v_pred[0, 0] / v_pred[1, 0] * (np.cos(self.direction) - np.cos(theta_pred))
-                    F_i[0, 0] = Fx_i
-                    F_i[1, 0] = Fy_i
+                    # if (self.velocity[1, 0] == 0):
+                    #     Fx_i = v_pred[0, 0] * np.cos(self.direction) * self.dt
+                    #     Fy_i = v_pred[0, 0] * np.sin(self.direction) * self.dt
+                    # else:
+                    #     Fx_i = v_pred[0, 0] / v_pred[1, 0] * (np.sin(self.direction) - np.sin(theta_pred))
+                    #     Fy_i = -v_pred[0, 0] / v_pred[1, 0] * (np.cos(self.direction) - np.cos(theta_pred))
+                    # F_i[0, 0] = Fx_i
+                    # F_i[1, 0] = Fy_i
+                    F_i = self.Prediction_P(v_pred)
                     heading = self.Heading(F_i, target, theta_pred)
-                    dist = self.Clearance(v_pred, lidar)  ###? inf?
+                    # dist = self.Clearance(v_pred, lidar)  ###? inf?
                     velocity = self.Velocity(F_i, v_pred)
                     G = self.alpha * heading + self.beta * dist + self.gamma * velocity
                     if (G > G0):
                         v_dwa = v_pred
                         G0 = G
-                    if (G == np.inf):
+                        # print("predict: ", v_dwa)
+                        # print("G function: ", G0)
+                    if (G0 == np.inf):
                         break
-                if (G == np.inf):
+                if (G0 == np.inf):
                         break
         else:
-            return np.zeros([0, 0]).reshape(2, 1)
-        return v_dwa, G
+            return np.zeros((2, 1)), 0, np.zeros((2, 1))
+        return v_dwa, G, F_i

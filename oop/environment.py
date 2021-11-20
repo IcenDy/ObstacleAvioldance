@@ -46,7 +46,7 @@ class LiDAR(Sensor):
         """
         direct_0 = np.array([1.0, 0.0]).reshape(2, 1)
         direct_theta = rotate_matrix(np.array([self.direction])).dot(direct_0)
-        print(direct_theta[0, 0, 0], direct_theta[0, 1, 0])
+        # print(direct_theta[0, 0, 0], direct_theta[0, 1, 0])
         direct_0[0, 0] = direct_theta[0, 0, 0]
         direct_0[1, 0] = direct_theta[0, 1, 0]
         num_angle = int(self.FOV / self.resolution) + 1
@@ -127,7 +127,7 @@ class IMU(Sensor):
         """
         if (self.status):
             results = self.Communication(robot, dt)
-            self.value = results
+            self.value = results #* 180 / np.pi
 
 class Actuator():
     def __init__(self):
@@ -149,10 +149,9 @@ class Track(Actuator):
         Mat_trans = 1 / self.R * np.array([1, self.D / 2, 1, -self.D / 2]).reshape(2, 2)
         w_LR = Mat_trans * velocity
         return w_LR
-    def Kinematics(self, velocity, direction, dt):
+    def Kinematics(self, F_i):
         # self.VelocityTrans(velocity)
-        self.position[0, 0] += velocity[0, 0] * np.cos(direction) * dt
-        self.position[1, 0] += velocity[1, 0] * np.sin(direction) * dt
+        self.position += F_i
 
 class Map():
     def __init__(self, width, length, resolution):
@@ -213,4 +212,4 @@ class Map():
         # goal
         ax.scatter(self.goals[-1][0, 0], self.goals[-1][1, 0], s=50, c=sns.xkcd_rgb['dirty yellow'])
         ax.axis([0, self.length_d, 0, self.width_d])
-        plt.show()
+        # plt.show()
