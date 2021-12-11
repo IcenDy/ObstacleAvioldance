@@ -13,7 +13,7 @@ class LiDAR():
         self.angles = np.linspace(-params_lidar[0] / 2.0, params_lidar[0] / 2.0, num_angles, True)
     def simulate(self, obstacles):
         vec_0 = np.array([1.0, 0.0]).reshape(2, 1)
-        tmp = utils.rotate_matrix(np.array([self.phyParams[2]])).dot(vec_0)
+        tmp = utils.rotate_matrix(np.array([self.state[2]])).dot(vec_0)
         vec_0[0, 0], vec_0[1, 0] = tmp[0, 0, 0], tmp[0, 1, 0]
         self.vec_b = utils.rotate_matrix(self.angles).dot(vec_0)
         for ob in obstacles:
@@ -29,9 +29,10 @@ class LiDAR():
                         n3 = np.linalg.norm(vec_i)
                         xp = xx - self.state[0: 2, :]
                         l_xp = np.linalg.norm(xp)
-                        if ((n1 <= n3)and(n2 <= n3)):
+                        if (((n1 < n3)and(n2 < n3))or(np.abs(n1 - n3) < 1e-4)or(np.abs(n2 - n3) < 1e-4)):
+                        # if ((np.abs(n1 - n3) < 1e-4)and(np.abs(n2 - n3) < 1e-4)):
                             if (np.linalg.norm(xp + self.vec_b[i]) >= max(l_xp, 1)):
-                                if (l_xp < self.value[i]):
+                                if (l_xp < self.measurement[i]):
                                     self.measurement[i] = l_xp
 
 class Map():
@@ -44,7 +45,7 @@ class Map():
     def visualization(self, fig):
         ax = fig.add_subplot(111)
         for ob in self.obstacles:
-            for i in ob.shape[0]:
+            for i in range(ob.shape[0]):
                 xx = [ob[i, 0], ob[i - 1, 0]]
                 yy = [ob[i, 1], ob[i - 1, 1]]
                 ax.plot(xx, yy, linewidth=5, c=sns.xkcd_rgb['nice blue'])

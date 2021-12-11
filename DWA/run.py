@@ -13,7 +13,7 @@ def main():
     robot = agents.Robot(x_r, limits, params_rob, params_dwa, dt)
     ''' lidar '''
     x_l = np.array([0, 0, 0],dtype=float).reshape(3, 1)
-    params_lidar = [120.0 * np.pi / 180.0, 2.0 * np.pi / 180.0, 100.0]
+    params_lidar = [180.0 * np.pi / 180.0, 45.0 * np.pi / 180.0, 100.0]
     lidar = environment.LiDAR(x_l, params_lidar)
     ''' map '''
     size = [150.0, 150.0]
@@ -26,7 +26,7 @@ def main():
     env.goals = np.c_[env.goals, goal_0]
     # repeat
     steps = 0
-    fig = plt.figure(figsize=(15, 15))
+    fig = plt.figure(figsize=(10, 10))
     while (steps < 5e3):
         lidar.simulate(env.obstacles)
         robot.dwa_decision(env.goals[:, -1], lidar.measurement, lidar.angles) 

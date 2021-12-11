@@ -50,33 +50,33 @@ class Robot():
             traj = np.c_[traj, x_]
         return traj  # (num+1)*5 array
     def heading_evaluation(self, x, target):
-        theta_s = utils.rad2deg(x[2, 0])
-        theta_t = utils.rad2deg(np.arctan2(target[0] - x[1, 0], target[1] - x[0, 0]))
+        theta_s = utils.rad2deg(x[2])
+        theta_t = utils.rad2deg(np.arctan2(target[0] - x[1], target[1] - x[0]))
         return 180 - np.abs(theta_s - theta_t)
     def clearance_evaluation(self, x, obstacles):  # 仅计算轨迹终点到障碍物的距离？
         dist_0 = 150  # 场所尺寸
-        for ob in obstacles:
-            delta = ob - x[0:2]
-            distances = np.hypot(delta[:, 0], delta[:, 1]) - self.phyParams[0]
+        # for ob in obstacles:
+        delta = obstacles - x[0:2]
+        distances = np.hypot(delta[:, 0], delta[:, 1]) - self.phyParams[0]
         dist_s = np.min(distances)
         if (dist_s < 0):
-            flag = 0
+            flag = 1
             dist = dist_0
         else:
-            flag = 1
+            flag = 0
             dist = min(dist_s, dist_0)
         return dist, flag
     def velocity_evaluation(self, x):
-        return np.abs(x[3, 0])
+        return np.abs(x[3])
     def breaking_distance(self, x):
-        v = x[3, 0]
+        v = x[3]
         a = self.kinematic[2]
         time = v / a
         return 0.5 * a * time**2
     def dwa_decision(self, target, measurement, angles):
         V_r = self.dynamic_window()  # list:[v_min, v_max, w_min, w_max]
-        num_v = np.floor((V_r[1] - V_r[0]) / self.kinematic[4]) + 1
-        num_w = np.floor((V_r[3] - V_r[2]) / self.kinematic[5]) + 1
+        num_v = int(np.floor((V_r[1] - V_r[0]) / self.kinematic[4]) + 1)
+        num_w = int(np.floor((V_r[3] - V_r[2]) / self.kinematic[5]) + 1)
         # results = np.zeros((num_v * num_w, 7), dtype=float)  # 0:v&w  1: [v, w, end_x, end_y, head, clear, velocity]
         results = []
         obstacles = self.predict_obstacles(measurement, angles)
@@ -85,13 +85,13 @@ class Robot():
                 v_next = V_r[0] + i * self.kinematic[4]
                 w_next = V_r[2] + j * self.kinematic[5]
                 u = np.array([v_next, w_next]).reshape(2, 1)
-                traj = self.predict_trajectory(u, num=20)  # (num+1)*2 array
-                heading = self.heading_evaluation(u, target)
-                dist, flag = self.clearance_evaluation(u, obstacles)
-                vel = self.velocity_evaluation(u)
-                breaking = self.breaking_distance(u)
+                traj = self.predict_trajectory(u, num=20)  # 5*(num+1) array
+                heading = self.heading_evaluation(traj[:, -1], target)
+                dist, flag = self.clearance_evaluation(traj[:, -1], obstacles)
+                vel = self.velocity_evaluation(traj[:, -1])
+                breaking = self.breaking_distance(traj[:, -1])
                 if ((dist > breaking)and(flag == 0)):
-                    result = np.array([v_next, w_next, traj[-1, 0], traj[-1, 1], heading, dist, vel])
+                    result = np.array([v_next, w_next, traj[0, -1], traj[1, -1], heading, dist, vel])
                     results.append(result)
         results = np.array(results)
         sum_h, sum_d, sum_v = np.sum(results[:, 4]), np.sum(results[:, 5]), np.sum(results[:, 6])
