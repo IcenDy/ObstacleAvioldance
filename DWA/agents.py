@@ -51,7 +51,7 @@ class Robot():
         return traj  # (num+1)*5 array
     def heading_evaluation(self, x, target):
         theta_s = utils.rad2deg(x[2, 0])
-        theta_t = utils.rad2deg(np.arctan2(target[1, 0] - x[1, 0], target[0, 0] - x[0, 0]))
+        theta_t = utils.rad2deg(np.arctan2(target[0] - x[1, 0], target[1] - x[0, 0]))
         return 180 - np.abs(theta_s - theta_t)
     def clearance_evaluation(self, x, obstacles):  # 仅计算轨迹终点到障碍物的距离？
         dist_0 = 150  # 场所尺寸
