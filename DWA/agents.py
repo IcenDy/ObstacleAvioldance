@@ -24,7 +24,7 @@ class Robot():
         w_max = self.kinematic[1]
         a_v = self.kinematic[2]
         a_w = self.kinematic[3]
-        Vs = np.array([0, v_max, -w_max, w_max])
+        Vs = np.array([0.0, v_max, -w_max, w_max])
         Vd = np.array([v_c - a_v * self.dt, v_c + a_v * self.dt, w_c - a_w * self.dt, w_c + a_w * self.dt])
         limits = np.c_[Vs, Vd]  # 4*2 array
         window = [np.max(limits[0]), np.min(limits[1]), np.max(limits[2]), np.min(limits[3])]
@@ -41,12 +41,12 @@ class Robot():
         x_ = A.dot(x) + B.dot(u)
         return x_
 
-    def predict_trajectory(self, v, num=20):
-        tau = self.dt / num
+    def predict_trajectory(self, v, num=30):
+        # tau = self.dt / num
         traj = self.state
         for i in range(num):
             x = traj[:, -1].reshape(5, 1)
-            x_ = self.state_equation(x, v, tau)
+            x_ = self.state_equation(x, v, self.dt)
             traj = np.c_[traj, x_]
         return traj  # (num+1)*5 array
     def heading_evaluation(self, x, target):
@@ -55,16 +55,20 @@ class Robot():
         return 180 - np.abs(theta_s - theta_t)
     def clearance_evaluation(self, x, obstacles):  # 仅计算轨迹终点到障碍物的距离？
         dist_0 = 150  # 场所尺寸
-        # for ob in obstacles:
-        delta = obstacles - x[0:2]
-        distances = np.hypot(delta[:, 0], delta[:, 1]) - self.phyParams[0]
-        dist_s = np.min(distances)
-        if (dist_s < 0):
-            flag = 1
-            dist = dist_0
-        else:
-            flag = 0
-            dist = min(dist_s, dist_0)
+        for ob in obstacles:
+            pos_ob = ob[:, 0:2]  # n*2 array
+            radius_ob = ob[:, 2]
+            delta = obstacles - x[0:2]
+            distances = np.hypot(delta[:, 0], delta[:, 1]) - radius_ob - self.phyParams[0]
+            dist_s = np.min(distances)
+            if (dist_s < 0):
+                flag = 1
+                dist = dist_0
+            else:
+                flag = 0
+                dist = min(dist_s, dist_0)
+        if (dist >= 3 * 0.5):
+            dist = 3 * 0.5
         return dist, flag
     def velocity_evaluation(self, x):
         return np.abs(x[3])
@@ -73,19 +77,18 @@ class Robot():
         a = self.kinematic[2]
         time = v / a
         return 0.5 * a * time**2
-    def dwa_decision(self, target, measurement, angles):
+    def dwa_decision(self, target, obstacles):
         V_r = self.dynamic_window()  # list:[v_min, v_max, w_min, w_max]
         num_v = int(np.floor((V_r[1] - V_r[0]) / self.kinematic[4]) + 1)
         num_w = int(np.floor((V_r[3] - V_r[2]) / self.kinematic[5]) + 1)
-        # results = np.zeros((num_v * num_w, 7), dtype=float)  # 0:v&w  1: [v, w, end_x, end_y, head, clear, velocity]
         results = []
-        obstacles = self.predict_obstacles(measurement, angles)
+        # obstacles = self.predict_obstacles(measurement, angles)
         for i in range(num_v):
             for j in range(num_w):
                 v_next = V_r[0] + i * self.kinematic[4]
                 w_next = V_r[2] + j * self.kinematic[5]
                 u = np.array([v_next, w_next]).reshape(2, 1)
-                traj = self.predict_trajectory(u, num=20)  # 5*(num+1) array
+                traj = self.predict_trajectory(u, num=30)  # 5*(num+1) array
                 heading = self.heading_evaluation(traj[:, -1], target)
                 dist, flag = self.clearance_evaluation(traj[:, -1], obstacles)
                 vel = self.velocity_evaluation(traj[:, -1])
@@ -104,6 +107,9 @@ class Robot():
         G = results[:, 4:7].dot(self.evalParams)
         id_max = np.argmax(G)
         v_dwa, w_dwa = results[id_max, 0], results[id_max, 1]
-        x_dwa, y_dwa = results[id_max, 2], results[id_max, 3]
-        theta = w_dwa * self.dt
-        self.state = np.array([v_dwa, w_dwa, theta, x_dwa, y_dwa]).reshape(5, 1)
+        u = np.array([v_dwa, w_dwa]).reshape(2, 1)
+        # x_dwa, y_dwa = results[id_max, 2], results[id_max, 3]
+        # theta = w_dwa * self.dt
+        # self.state = np.array([v_dwa, w_dwa, theta, x_dwa, y_dwa]).reshape(5, 1)
+        s_ = self.state_equation(self.state, u, self.dt)
+        self.state = s_
