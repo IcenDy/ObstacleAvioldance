@@ -54,19 +54,18 @@ class Robot():
         theta_t = utils.rad2deg(np.arctan2(target[0] - x[1], target[1] - x[0]))
         return 180 - np.abs(theta_s - theta_t)
     def clearance_evaluation(self, x, obstacles):  # 仅计算轨迹终点到障碍物的距离？
-        dist_0 = 150  # 场所尺寸
+        dist = 100  # 场所尺寸
         for ob in obstacles:
             pos_ob = ob[:, 0:2]  # n*2 array
             radius_ob = ob[:, 2]
-            delta = obstacles - x[0:2]
+            delta = pos_ob - x[0:2]
             distances = np.hypot(delta[:, 0], delta[:, 1]) - radius_ob - self.phyParams[0]
             dist_s = np.min(distances)
             if (dist_s < 0):
                 flag = 1
-                dist = dist_0
             else:
                 flag = 0
-                dist = min(dist_s, dist_0)
+                dist = min(dist_s, dist)
         if (dist >= 3 * 0.5):
             dist = 3 * 0.5
         return dist, flag
@@ -75,12 +74,15 @@ class Robot():
     def breaking_distance(self, x):
         v = x[3]
         a = self.kinematic[2]
-        time = v / a
-        return 0.5 * a * time**2
+        stopdist = 0
+        while (v > 0):
+            stopdist += v * self.dt
+            v -= a * self.dt
+        return stopdist
     def dwa_decision(self, target, obstacles):
         V_r = self.dynamic_window()  # list:[v_min, v_max, w_min, w_max]
-        num_v = int(np.floor((V_r[1] - V_r[0]) / self.kinematic[4]) + 1)
-        num_w = int(np.floor((V_r[3] - V_r[2]) / self.kinematic[5]) + 1)
+        num_v = round((V_r[1] - V_r[0]) / self.kinematic[4]) + 1
+        num_w = round((V_r[3] - V_r[2]) / self.kinematic[5]) + 1
         results = []
         # obstacles = self.predict_obstacles(measurement, angles)
         for i in range(num_v):

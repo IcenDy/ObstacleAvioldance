@@ -44,18 +44,15 @@ class Map():
         self.labels = []
     def visualization(self, fig):
         ax = fig.add_subplot(111)
-        theta = np.linspace(0, 20, 2 * np.pi, False, dtype=float)
+        theta = np.linspace(0, 2 * np.pi, 21, True)
         for ob in self.obstacles:
-            xx, yy = [], []
             for i in range(ob.shape[0]):
-                # xx = [ob[i, 0], ob[i - 1, 0]]
-                # yy = [ob[i, 1], ob[i - 1, 1]]
-                # ax.plot(xx, yy, linewidth=5, c=sns.xkcd_rgb['nice blue'])
                 radius = ob[i, 2]
-                xx.append(radius * np.cos(theta) + ob[i, 0])
-                yy.append(radius * np.sin(theta) + ob[i, 1])
+                xx = radius * np.cos(theta) + ob[i, 0]
+                yy = radius * np.sin(theta) + ob[i, 1]
                 ax.plot(xx, yy, linewidth=3, c=sns.xkcd_rgb['nice blue'])
         ax.scatter(self.goals[0, -1], self.goals[1, -1], s=50, c=sns.xkcd_rgb['dirty yellow'])
         ax.scatter(self.agents[0, -1], self.agents[1, -1], s=30, c=sns.xkcd_rgb['dark maroon'])
         ax.plot(self.agents[0, 1:], self.agents[1, 1:], linewidth=2, linestyle='-', c=sns.xkcd_rgb['tea'])
         plt.pause(0.01)
+        # plt.show()
