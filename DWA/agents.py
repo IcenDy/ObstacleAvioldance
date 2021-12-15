@@ -66,8 +66,8 @@ class Robot():
             else:
                 flag = 0
                 dist = min(dist_s, dist)
-        if (dist >= 3 * 0.5):
-            dist = 3 * 0.5
+        if (dist >= 3 * 1.0):
+            dist = 3 * 1.0
         return dist, flag
     def velocity_evaluation(self, x):
         return np.abs(x[3])
@@ -98,20 +98,21 @@ class Robot():
                 if ((dist > breaking)and(flag == 0)):
                     result = np.array([v_next, w_next, traj[0, -1], traj[1, -1], heading, dist, vel])
                     results.append(result)
-        results = np.array(results)
-        sum_h, sum_d, sum_v = np.sum(results[:, 4]), np.sum(results[:, 5]), np.sum(results[:, 6])
-        if (sum_h != 0):
-            results[:, 4] /= sum_h
-        if (sum_d != 0):
-            results[:, 5] /= sum_d
-        if (sum_v != 0):
-            results[:, 6] /= sum_v
-        G = results[:, 4:7].dot(self.evalParams)
-        id_max = np.argmax(G)
-        v_dwa, w_dwa = results[id_max, 0], results[id_max, 1]
-        u = np.array([v_dwa, w_dwa]).reshape(2, 1)
-        # x_dwa, y_dwa = results[id_max, 2], results[id_max, 3]
-        # theta = w_dwa * self.dt
-        # self.state = np.array([v_dwa, w_dwa, theta, x_dwa, y_dwa]).reshape(5, 1)
+        if (len(result) == 0):
+            u = np.zeros((2, 1), dtype=float)
+            print("have to stop!!!")
+        else:
+            results = np.array(results)
+            sum_h, sum_d, sum_v = np.sum(results[:, 4]), np.sum(results[:, 5]), np.sum(results[:, 6])
+            if (sum_h != 0):
+                results[:, 4] /= sum_h
+            if (sum_d != 0):
+                results[:, 5] /= sum_d
+            if (sum_v != 0):
+                results[:, 6] /= sum_v
+            G = results[:, 4:7].dot(self.evalParams)
+            id_max = np.argmax(G)
+            v_dwa, w_dwa = results[id_max, 0], results[id_max, 1]
+            u = np.array([v_dwa, w_dwa]).reshape(2, 1)
         s_ = self.state_equation(self.state, u, self.dt)
         self.state = s_

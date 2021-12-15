@@ -56,3 +56,6 @@ class Map():
         ax.plot(self.agents[0, 1:], self.agents[1, 1:], linewidth=2, linestyle='-', c=sns.xkcd_rgb['tea'])
         plt.pause(0.01)
         # plt.show()
+    
+    def obstacle_move(self, coef, velocity):
+        self.obstacles[0][0:3, 1] += coef * velocity
